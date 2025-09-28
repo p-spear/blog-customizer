@@ -11,16 +11,14 @@ import { ArrowButton } from 'src/ui/arrow-button';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Button } from 'src/ui/button';
-import { RefObject, useState } from 'react';
+import { useRef, useState } from 'react';
 import clsx from 'clsx';
 import styles from './ArticleParamsForm.module.scss';
 import { Separator } from 'src/ui/separator';
+import { useOutsideClickCloseMenu } from './hooks/useOutsideClickCloseMenu';
 
 type ArticleParamsFormProps = {
-	isOpen: boolean;
 	formState: TFormData;
-	onClick: () => void;
-	asideRef: RefObject<HTMLElement> | undefined;
 	onButton: (data: TFormData) => void;
 };
 
@@ -33,13 +31,19 @@ export type TFormData = {
 };
 
 export const ArticleParamsForm = ({
-	isOpen,
 	formState,
-	onClick,
-	asideRef,
 	onButton,
 }: ArticleParamsFormProps) => {
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [formData, setFormData] = useState(formState);
+
+	const asideRef = useRef<HTMLElement | null>(null);
+
+	useOutsideClickCloseMenu({
+		isMenuOpen,
+		asideRef,
+		onChange: setIsMenuOpen,
+	});
 
 	const titleFormStyle = {
 		color: '#000',
@@ -48,6 +52,10 @@ export const ArticleParamsForm = ({
 		textAlign: 'center' as const,
 		fontWeight: '800',
 		textTransform: 'uppercase' as const,
+	};
+
+	const handleClickArrow = () => {
+		setIsMenuOpen((isMenuOpen) => !isMenuOpen);
 	};
 
 	const handleClickFont = (selected: OptionType) => {
@@ -72,19 +80,23 @@ export const ArticleParamsForm = ({
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
+		setIsMenuOpen(false);
 		onButton(formData);
 	};
 
 	const handleReset = () => {
 		setFormData(defaultArticleState);
+		setIsMenuOpen(false);
 		onButton(defaultArticleState);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={onClick} />
+			<ArrowButton isOpen={isMenuOpen} onClick={handleClickArrow} />
 			<aside
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}
+				className={clsx(styles.container, {
+					[styles.container_open]: isMenuOpen,
+				})}
 				ref={asideRef}>
 				<form
 					className={styles.form}
